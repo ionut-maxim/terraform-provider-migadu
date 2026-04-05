@@ -1,0 +1,53 @@
+[tools]
+go = "1.26.1"
+terraform = "latest"
+
+[tasks.build]
+run = "go build -v -o terraform-provider-migadu ."
+
+[tasks.install-mirror]
+description = "Build and install the provider into the local filesystem mirror (needed for terraform init and IDE autocomplete)"
+run = """
+#!/usr/bin/env bash
+set -e
+VERSION="0.0.1"
+GOOS=$(go env GOOS)
+GOARCH=$(go env GOARCH)
+MIRROR="$HOME/.terraform-providers-mirror/registry.terraform.io/ionut-maxim/migadu/${VERSION}"
+BINARY="terraform-provider-migadu_v${VERSION}"
+
+mkdir -p "${MIRROR}"
+go build -o "/tmp/${BINARY}" .
+cd /tmp && zip "${GOOS}_${GOARCH}.zip" "${BINARY}"
+mv "/tmp/${GOOS}_${GOARCH}.zip" "${MIRROR}/"
+rm "/tmp/${BINARY}"
+echo "installed ${VERSION} for ${GOOS}/${GOARCH} -> ${MIRROR}"
+"""
+
+[tasks.lint]
+run = "golangci-lint run"
+
+[tasks.generate]
+depends = ["generate:fmt-examples", "generate:docs"]
+
+[tasks."generate:fmt-examples"]
+run = "terraform fmt -recursive ./examples/"
+
+[tasks."generate:docs"]
+run = "cd tools && go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs generate --provider-dir .. --provider-name migadu"
+
+[tasks.fmt]
+run = "gofmt -s -w -e ."
+
+[tasks.test]
+run = "go test -v -cover -timeout=120s -parallel=10 ./..."
+
+[tasks.init-dev]
+description = "Run terraform init in dev/ using the local filesystem mirror"
+run = "terraform -chdir=dev init -upgrade"
+
+[tasks.testacc]
+run = "TF_ACC=1 go test -v -cover -timeout 120m ./..."
+
+[tasks.default]
+depends = ["fmt", "lint", "build", "generate"]
