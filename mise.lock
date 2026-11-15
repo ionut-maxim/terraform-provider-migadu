@@ -2,6 +2,23 @@
 
 lockfile_version = 4
 
+[[tools."aqua:golangci/golangci-lint"]]
+version = "2.15.0"
+backend = "aqua:golangci/golangci-lint"
+specifiers = ["2.15.0"]
+
+[tools."aqua:golangci/golangci-lint"."platforms.linux-x64"]
+checksum = "sha256:9b7fe6a6bf6334b98decf8d86b11415ea7889afdabdd1959fdce23af2a9ebcea"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.15.0/golangci-lint-2.15.0-linux-amd64.tar.gz"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/647132535"
+provenance = "github-attestations"
+
+[tools."aqua:golangci/golangci-lint"."platforms.macos-arm64"]
+checksum = "sha256:d1e409481a8ca846c4bc97e781eb5cb1bd5c23353a0b3977a1cbda1b1b6447d5"
+url = "https://github.com/golangci/golangci-lint/releases/download/v2.15.0/golangci-lint-2.15.0-darwin-arm64.tar.gz"
+url_api = "https://api.github.com/repos/golangci/golangci-lint/releases/assets/647132534"
+provenance = "github-attestations"
+
 [[tools.go]]
 version = "1.26.1"
 backend = "core:go"
@@ -18,7 +35,7 @@ url = "https://dl.google.com/go/go1.26.1.darwin-arm64.tar.gz"
 [[tools.terraform]]
 version = "1.17.0"
 backend = "aqua:hashicorp/terraform"
-specifiers = ["latest"]
+specifiers = ["1.17.0"]
 
 [tools.terraform."platforms.linux-x64"]
 checksum = "sha256:c168cab7c637a8769fdb90089ddd19de701bc6ff8aca64dc2e2185fe46f59f67"

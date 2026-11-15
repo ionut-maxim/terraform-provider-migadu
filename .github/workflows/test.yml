@@ -1,58 +1,58 @@
-# Terraform Provider testing workflow.
+# Build, lint, check generated docs and run the acceptance tests on every pull
+# request and push. The tools and steps are the mise.toml tasks, so
+# `mise run build|lint|generate|testacc` locally does the same.
 name: Tests
 
-# This GitHub action runs your tests for each pull request and push.
-# Optionally, you can turn it on using a schedule for regular testing.
 on:
   pull_request:
     paths-ignore:
       - 'README.md'
   push:
+    branches: [main]
     paths-ignore:
       - 'README.md'
 
-# Testing only needs permissions to read the repository contents.
 permissions:
   contents: read
 
 jobs:
-  # Ensure project builds before running testing matrix
   build:
-    name: Build
+    name: Build and lint
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          go-version-file: 'go.mod'
-          cache: true
-      - run: go mod download
-      - run: go build -v .
-      - name: Run linters
-        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
+          persist-credentials: false
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
+        env:
+          MISE_LOCKED: "1" # install only what mise.lock records, checksums included
         with:
-          version: latest
+          # renovate: datasource=github-releases depName=jdx/mise
+          version: 2026.11.8 # reads mise.lock's format (older mise can't)
+      - run: mise run build
+      - run: mise run lint
 
   generate:
+    name: Generated docs are current
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          go-version-file: 'go.mod'
-          cache: true
-      # We need the latest version of Terraform for our documentation generation to use
-      - uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4.0.0
+          persist-credentials: false
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
+        env:
+          MISE_LOCKED: "1" # install only what mise.lock records, checksums included
         with:
-          terraform_wrapper: false
-      - run: make generate
-      - name: git diff
+          # renovate: datasource=github-releases depName=jdx/mise
+          version: 2026.11.8 # reads mise.lock's format (older mise can't)
+      - run: mise run generate
+      - name: No changes after generating
         run: |
           git diff --compact-summary --exit-code || \
-            (echo; echo "Unexpected difference in directories after code generation. Run 'make generate' command and commit."; exit 1)
+            (echo; echo "Generated files are out of date: run 'mise run generate' and commit."; exit 1)
 
-  # Run acceptance tests in a matrix with Terraform CLI versions
   test:
     name: 'Acceptance Tests: Terraform ${{ matrix.terraform }}'
     needs: build
@@ -61,22 +61,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Terraform versions
+        # Older Terraform versions than mise.toml's, which users still run.
         terraform:
           - '1.13.*'
           - '1.14.*'
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          go-version-file: 'go.mod'
-          cache: true
+          persist-credentials: false
+      - uses: jdx/mise-action@f5be966e4a917d54244728e6a5fdcd1d93a35e6c # v5.2.6
+        env:
+          MISE_LOCKED: "1" # install only what mise.lock records, checksums included
+        with:
+          # renovate: datasource=github-releases depName=jdx/mise
+          version: 2026.11.8 # reads mise.lock's format (older mise can't)
+          install_args: go
+      # Not from mise: the matrix needs Terraform versions mise.lock doesn't hold.
       - uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4.0.0
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
-      - run: go mod download
-      - env:
+      - name: Acceptance tests
+        env:
           TF_ACC: "1"
         run: go test -v -cover ./internal/provider/
         timeout-minutes: 10

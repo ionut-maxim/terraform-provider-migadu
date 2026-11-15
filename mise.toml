@@ -1,6 +1,9 @@
+# Pinned, with checksums in mise.lock; Renovate bumps both. CI runs these
+# tasks too (.github/workflows/test.yml).
 [tools]
+"aqua:golangci/golangci-lint" = "2.15.0"
 go = "1.26.1"
-terraform = "latest"
+terraform = "1.17.0" # docs generation; acceptance tests also run older versions
 
 [tasks.build]
 run = "go build -v -o terraform-provider-migadu ."
