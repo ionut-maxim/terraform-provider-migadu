@@ -29,7 +29,7 @@ jobs:
           MISE_LOCKED: "1" # install only what mise.lock records, checksums included
         with:
           # renovate: datasource=github-releases depName=jdx/mise
-          version: 2026.11.8 # reads mise.lock's format (older mise can't)
+          version: 2026.11.10 # reads mise.lock's format (older mise can't)
       - run: mise run build
       - run: mise run lint
 
@@ -46,7 +46,7 @@ jobs:
           MISE_LOCKED: "1" # install only what mise.lock records, checksums included
         with:
           # renovate: datasource=github-releases depName=jdx/mise
-          version: 2026.11.8 # reads mise.lock's format (older mise can't)
+          version: 2026.11.10 # reads mise.lock's format (older mise can't)
       - run: mise run generate
       - name: No changes after generating
         run: |
@@ -74,7 +74,7 @@ jobs:
           MISE_LOCKED: "1" # install only what mise.lock records, checksums included
         with:
           # renovate: datasource=github-releases depName=jdx/mise
-          version: 2026.11.8 # reads mise.lock's format (older mise can't)
+          version: 2026.11.10 # reads mise.lock's format (older mise can't)
           install_args: go
       # Not from mise: the matrix needs Terraform versions mise.lock doesn't hold.
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
